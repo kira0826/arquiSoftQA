@@ -62,7 +62,7 @@ public class Client {
                     return;
                 }
 
-                message += whoami + ":" + hostname + ":";
+                message = whoami + ":" + hostname + ":";
                 System.out.println("Ingrese un mensaje para enviar al servidor: ");
                 input = scanner.nextLine();
                 if (input.equals("exit"))
