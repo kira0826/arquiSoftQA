@@ -86,7 +86,7 @@ public class PrinterI implements Demo.Printer{
             
             
 
-            }else if(command.startsWith("counterRequest")) {
+            }else if(command.equals("counterRequest")) {
 
                 response.value = String.valueOf( requestCounts.get(host));
                 response.responseTime = 0;
