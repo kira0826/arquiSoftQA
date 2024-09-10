@@ -1,7 +1,7 @@
 .gradle
 /gradle
 **/build/
-**/bin/
+**/bin/main
 **/tmp/
 **/generated-src/
 # IDE-specific files
