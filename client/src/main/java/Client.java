@@ -13,6 +13,7 @@ public class Client {
 
     private static int sentRequestCount = 0;
     private static int receivedResponseCount = 0;
+    private static List<Long> processingTimes = new ArrayList<Long>();
     private static List<Long> responseTimes = new ArrayList<Long>();
 
     public static void main(String[] args) {
@@ -32,6 +33,9 @@ public class Client {
                 throw new Error("Invalid proxy");
             }
 
+            long start = 0;
+            long end = 0;
+            long responseTime = 0;
             String message = "";
             String whoami = f("whoami");
             String hostname = "";
@@ -64,12 +68,16 @@ public class Client {
                 if (input.equals("exit"))
                     return;
                 sentRequestCount++;
+                start = System.currentTimeMillis();
                 response = service.printString(message + input);
+                end = System.currentTimeMillis();
                 receivedResponseCount++;
-                responseTimes.add(response.responseTime);
-
+                processingTimes.add(response.responseTime);
+                responseTime = end - start;
+                responseTimes.add(responseTime);
                 System.out.println("Respuesta desde el server: " + response.value);
-                System.out.println("Tiempo de respuesta: " + response.responseTime);
+                System.out.println("Tiempo de procesamiento: " + response.responseTime);
+                System.out.println("Tiempo de respuesta: " + responseTime);
                 stats(askForServerCount(service));
             }
 
@@ -78,6 +86,9 @@ public class Client {
 
     public static void benchmark(int amount, String input, Demo.PrinterPrx service) {
         reset();
+        long start = 0;
+        long end = 0;
+        long responseTime = 0;
         String message = "";
         String whoami = f("whoami");
         String hostname = "";
@@ -86,11 +97,16 @@ public class Client {
         for (int i = 0; i < amount; i++) {
             System.out.println("Enviando request " + i);
             sentRequestCount++;
+            start = System.currentTimeMillis();
             response = service.printString(message + input);
-            responseTimes.add(response.responseTime);
+            end = System.currentTimeMillis();
+            responseTime = end - start;
+            responseTimes.add(responseTime);
+            processingTimes.add(response.responseTime);
             receivedResponseCount++;
         }
         System.out.println(showResponseTimes());
+        System.out.println(showProcessingTimes());
         stats(askForServerCount(service));
         System.out.println("Benchmark finalizado");
         reset();
@@ -99,7 +115,15 @@ public class Client {
     public static void reset() {
         sentRequestCount = 0;
         receivedResponseCount = 0;
-        responseTimes = new ArrayList<Long>();
+        processingTimes = new ArrayList<Long>();
+    }
+
+    public static String showProcessingTimes() {
+        String response = "";
+        for (int i = 0; i < processingTimes.size(); i++) {
+            response += i + ". " + processingTimes.get(i) + "\n";
+        }
+        return response;
     }
 
     public static String showResponseTimes() {
@@ -129,7 +153,7 @@ public class Client {
                 + (((sentRequestCount - receivedResponseCount) - (sentRequestCount - serverCounter))
                         / sentRequestCount) * 100
                 + "%");
-        System.out.println("Jitter: " + calcularDesviacionEstandar(responseTimes));
+        System.out.println("Jitter: " + calcularDesviacionEstandar(processingTimes));
     }
 
     public static String f(String m) {
