@@ -105,7 +105,9 @@ public class Client {
             processingTimes.add(response.responseTime);
             receivedResponseCount++;
         }
+        System.out.println("Tiempos de respuesta");
         System.out.println(showResponseTimes());
+        System.out.println("Tiempos de procesamiento");
         System.out.println(showProcessingTimes());
         stats(askForServerCount(service));
         System.out.println("Benchmark finalizado");
@@ -153,7 +155,7 @@ public class Client {
                 + (((sentRequestCount - receivedResponseCount) - (sentRequestCount - serverCounter))
                         / sentRequestCount) * 100
                 + "%");
-        System.out.println("Jitter: " + calcularDesviacionEstandar(processingTimes));
+        System.out.println("Jitter: " + calcularDesviacionEstandar(responseTimes));
     }
 
     public static String f(String m) {
