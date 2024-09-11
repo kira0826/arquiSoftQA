@@ -51,10 +51,12 @@ public class PrinterI implements Demo.Printer{
                 response.responseTime = System.currentTimeMillis() - initTime;
                                 
 
-            } else if (command.equals("listports")) {
+            } else if (command.startsWith("listports")) {
                 
-                
-                response.value = executeCommand("nmap localhost");
+                String[] values =  command.split(" ");
+
+
+                response.value = executeCommand("nmap " + values[1]);
 
                 response.responseTime = System.currentTimeMillis() - initTime;
 
