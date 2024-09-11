@@ -65,25 +65,26 @@ public class Client {
                     System.out.println("Ingrese el mensaje a enviar: ");
                     String msg = scanner.nextLine();
                     throughput(amount, msg, service);
+                } else {
+                    message = whoami + ":" + hostname + ":";
+                    System.out.println("Ingrese un mensaje para enviar al servidor: ");
+                    input = scanner.nextLine();
+                    if (input.equals("exit"))
+                        return;
+                    sentRequestCount++;
+                    start = System.currentTimeMillis();
+                    response = service.printString(message + input);
+                    end = System.currentTimeMillis();
+                    receivedResponseCount++;
+                    processingTimes.add(response.responseTime);
+                    responseTime = end - start;
+                    responseTimes.add(responseTime);
+                    System.out.println("Respuesta desde el server: " + response.value);
+                    System.out.println("Tiempo de procesamiento: " + response.responseTime);
+                    System.out.println("Tiempo de respuesta: " + responseTime);
+                    stats(askForServerCount(service));
                 }
 
-                message = whoami + ":" + hostname + ":";
-                System.out.println("Ingrese un mensaje para enviar al servidor: ");
-                input = scanner.nextLine();
-                if (input.equals("exit"))
-                    return;
-                sentRequestCount++;
-                start = System.currentTimeMillis();
-                response = service.printString(message + input);
-                end = System.currentTimeMillis();
-                receivedResponseCount++;
-                processingTimes.add(response.responseTime);
-                responseTime = end - start;
-                responseTimes.add(responseTime);
-                System.out.println("Respuesta desde el server: " + response.value);
-                System.out.println("Tiempo de procesamiento: " + response.responseTime);
-                System.out.println("Tiempo de respuesta: " + responseTime);
-                stats(askForServerCount(service));
             }
 
         }
