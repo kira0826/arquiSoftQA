@@ -51,7 +51,7 @@ public class Client {
             }
 
             while (true) {
-                System.out.println("Modo de prueba:\n1. Unitario\n2. Benchmark");
+                System.out.println("Modo de prueba:\n1. Unitario\n2. Benchmark\n3. Throughput");
                 int mode = Integer.parseInt(scanner.nextLine());
                 if (mode == 2) {
                     System.out.println("Ingrese la cantidad de request a enviar: ");
@@ -59,29 +59,59 @@ public class Client {
                     System.out.println("Ingrese el mensaje a enviar: ");
                     String msg = scanner.nextLine();
                     benchmark(amount, msg, service);
-                    return;
+                } else if (mode == 3) {
+                    System.out.println("Ingrese la cantidad de tiempo a realizar: ");
+                    int amount = Integer.parseInt(scanner.nextLine());
+                    System.out.println("Ingrese el mensaje a enviar: ");
+                    String msg = scanner.nextLine();
+                    throughput(amount, msg, service);
+                } else {
+                    message = whoami + ":" + hostname + ":";
+                    System.out.println("Ingrese un mensaje para enviar al servidor: ");
+                    input = scanner.nextLine();
+                    if (input.equals("exit"))
+                        return;
+                    sentRequestCount++;
+                    start = System.currentTimeMillis();
+                    response = service.printString(message + input);
+                    end = System.currentTimeMillis();
+                    receivedResponseCount++;
+                    processingTimes.add(response.responseTime);
+                    responseTime = end - start;
+                    responseTimes.add(responseTime);
+                    System.out.println("Respuesta desde el server: " + response.value);
+                    System.out.println("Tiempo de procesamiento: " + response.responseTime);
+                    System.out.println("Tiempo de respuesta: " + responseTime);
+                    stats(askForServerCount(service));
                 }
 
-                message = whoami + ":" + hostname + ":";
-                System.out.println("Ingrese un mensaje para enviar al servidor: ");
-                input = scanner.nextLine();
-                if (input.equals("exit"))
-                    return;
-                sentRequestCount++;
-                start = System.currentTimeMillis();
-                response = service.printString(message + input);
-                end = System.currentTimeMillis();
-                receivedResponseCount++;
-                processingTimes.add(response.responseTime);
-                responseTime = end - start;
-                responseTimes.add(responseTime);
-                System.out.println("Respuesta desde el server: " + response.value);
-                System.out.println("Tiempo de procesamiento: " + response.responseTime);
-                System.out.println("Tiempo de respuesta: " + responseTime);
-                stats(askForServerCount(service));
             }
 
         }
+    }
+
+    public static void throughput(int timeAmount, String input, Demo.PrinterPrx service) {
+        String message = "";
+        String whoami = f("whoami");
+        String hostname = "";
+        message += whoami + ":" + hostname + ":";
+        Response response = null;
+
+        int requestCount = 0;
+
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < timeAmount * 1000) {
+            response = service.printString(message + input);
+            requestCount++;
+        }
+
+        long elapsedTime = System.currentTimeMillis() - startTime;
+
+        double throughput = (double) requestCount / (elapsedTime / 1000.0);
+
+        System.out.println("Total de peticiones completadas: " + requestCount);
+        System.out.println("Tiempo total transcurrido (ms): " + elapsedTime);
+        System.out.println("Throughput (peticiones por segundo): " + throughput);
     }
 
     public static void benchmark(int amount, String input, Demo.PrinterPrx service) {
