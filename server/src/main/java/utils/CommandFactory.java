@@ -8,6 +8,7 @@ import commands.FibonacciAndPrimesCommand;
 import commands.ListNetworkInterfacesCommand;
 import commands.ListPortsCommands;
 import commands.ResetCommand;
+import commands.SendOneMessage;
 import interfaces.Command;
 
 public class CommandFactory {
@@ -21,6 +22,7 @@ public class CommandFactory {
         commandMap.put("fibonnaciAndPrimes", new FibonacciAndPrimesCommand());
         commandMap.put("counterRequest", new CounterRequestCommand(requestCounts));
         commandMap.put("reset", new ResetCommand(requestCounts));
+        commandMap.put("to", new SendOneMessage());
 
     }
 

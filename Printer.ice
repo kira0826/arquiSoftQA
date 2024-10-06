@@ -4,8 +4,20 @@ module Demo
         long responseTime;
         string value;
     }
-    interface Printer
+    
+
+    interface CallBack
     {
-        Response printString(string s);
+        string reportResponse(string msg);
     }
+
+    interface Printer
+    
+    {
+
+        void registerCallback(string hostname, CallBack* callBack);
+        Response printString(string s);
+
+    }
+
 }

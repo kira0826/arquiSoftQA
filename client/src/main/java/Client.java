@@ -1,4 +1,5 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -6,6 +7,9 @@ import java.util.List;
 import java.util.Scanner;
 
 import com.zeroc.Ice.InputStream;
+import com.zeroc.Ice.ObjectAdapter;
+import com.zeroc.Ice.ObjectPrx;
+import com.zeroc.Ice.Util;
 
 import Demo.Response;
 
@@ -23,10 +27,39 @@ public class Client {
 
         try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args, "config.client",
                 extraArgs)) {
-        
-            Response response = null;
+
+            //ICE CONFIGURATION
+                
             Demo.PrinterPrx service = Demo.PrinterPrx
                     .checkedCast(communicator.propertyToProxy("Printer.Proxy"));
+
+            //Create adapter to expose the callback object
+            ObjectAdapter adapter = communicator.createObjectAdapter("CallBack");
+            Demo.CallBack callBack = new CallbackI();
+            
+            //Cast the proxy to the correct type
+            ObjectPrx prx = adapter.add(callBack, Util.stringToIdentity("Callback"));   
+            Demo.CallBackPrx callBackPrx = Demo.CallBackPrx.checkedCast(prx);
+
+            String hostnameForProxy = "";
+            try {
+                hostnameForProxy = InetAddress.getLocalHost().getHostAddress();
+            } catch (UnknownHostException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            System.out.println("Dame el identificador del proxy: ");
+            String temHost = scanner.nextLine();
+
+            System.out.println("Hostname for proxy: " + hostnameForProxy); 
+            service.registerCallback(temHost, callBackPrx);
+
+
+            adapter.activate();
+
+            Response response = null;
+
 
             if (service == null) {
                 throw new Error("Invalid proxy");
