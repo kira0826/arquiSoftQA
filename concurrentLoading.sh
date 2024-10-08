@@ -21,11 +21,11 @@ do
         # Conectar por ssh, ejecutar client.jar y enviar las entradas automáticas 1000 veces usando sshpass
         sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -t $USER@$SERVER << EOF
         cd $REMOTE_PATH
-        for ((j=1; j<=100; j++))
+        for ((j=1; j<=2; j++))
         do
             echo "Ejecutando petición \$j de 1000"
             # Ejecutar el client.jar y enviar las entradas 1 y 100000 cuando se soliciten
-            echo -e "1\nto xhgrid7 micoño" | java -jar client.jar
+            echo -e "$i\n1\nto xhgrid7 mensajitoCoqueto" | java -jar client.jar
         done
 EOF
         echo "Proceso completado en $SERVER con 1000 peticiones."

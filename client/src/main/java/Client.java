@@ -1,12 +1,18 @@
 import java.io.*;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
-import com.zeroc.Ice.InputStream;
 import com.zeroc.Ice.ObjectAdapter;
 import com.zeroc.Ice.ObjectPrx;
 import com.zeroc.Ice.Util;
@@ -26,46 +32,63 @@ public class Client {
     private static long start = 0;
     private static long end = 0;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
+        // Obtén la dirección IP en el segmento 10.147.19
+        String clientIP = Collections.list(NetworkInterface.getNetworkInterfaces()).stream()
+                .flatMap(intf -> Collections.list(intf.getInetAddresses()).stream())
+                .filter(addr -> addr.getHostAddress().startsWith("10.147.19"))
+                .map(InetAddress::getHostAddress)
+                .findFirst()
+                .orElse("localhost");
+        System.out.println("Client IP: " + clientIP);
+        // Crear una lista de configuraciones dinámicamente
+        String[] iceArgs = {
+                "--Printer.Proxy=SimplePrinter:tcp -p 9099", // Proxy de servicio
+                "--CallBack.Endpoints=tcp -h " + clientIP, // Endpoints dinámicos
+                "--Ice.Default.Host=" + "xhgrid5", // Establece la IP del cliente
+                "--Ice.ThreadPool.Server.Size=6", // Configuración del tamaño del thread pool
+        };
         java.util.List<String> extraArgs = new java.util.ArrayList<>();
 
-        try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args, "config.client",
-                extraArgs)) {
+        try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(iceArgs, extraArgs)) {
 
-            //ICE CONFIGURATION
+            // ICE CONFIGURATION
+            communicator.getProperties().setProperty("Printer.Proxy", "SimplePrinter:tcp -p 9099");
+            communicator.getProperties().setProperty("CallBack.Endpoints", "tcp -h " + clientIP);
+            communicator.getProperties().setProperty("Ice.Default.Host", "xhgrid5");
+            communicator.getProperties().setProperty("Ice.ThreadPool.Server.Size", "6");
 
             Demo.PrinterPrx service = Demo.PrinterPrx
                     .checkedCast(communicator.propertyToProxy("Printer.Proxy"));
 
-            //Create adapter to expose the callback object
+            // Create adapter to expose the callback object
             ObjectAdapter adapter = communicator.createObjectAdapter("CallBack");
 
             CallbackI callbackI = new CallbackI();
             Demo.CallBack callBack = callbackI;
 
-            //Cast the proxy to the correct type
+            // Cast the proxy to the correct type
             ObjectPrx prx = adapter.add(callBack, Util.stringToIdentity("Callback"));
             Demo.CallBackPrx callBackPrx = Demo.CallBackPrx.checkedCast(prx);
 
-            String hostnameForProxy = "";
-            try {
-                hostnameForProxy = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            // String hostnameForProxy = "";
+            // try {
+            // hostnameForProxy = InetAddress.getLocalHost().getHostAddress();
+            // } catch (UnknownHostException e) {
+            // // TODO Auto-generated catch block
+            // e.printStackTrace();
+            // }
 
             System.out.println("Dame el identificador del proxy: ");
             String temHost = scanner.nextLine();
+            System.out.println("TemHost: " + temHost);
+            // System.out.println("Hostname for proxy: " + hostnameForProxy);
 
-            System.out.println("Hostname for proxy: " + hostnameForProxy);
-
-            //register the callback
+            // register the callback
             service.registerCallback(temHost, callBackPrx);
 
             adapter.activate();
-
-
 
             if (service == null) {
                 throw new Error("Invalid proxy");
@@ -79,7 +102,7 @@ public class Client {
                             System.exit(0);
                             break;
                         case 1:
-                            unitario(service,callbackI);
+                            unitario(service, callbackI);
                             break;
                         case 2:
                             benchmark(service);
@@ -103,6 +126,7 @@ public class Client {
     public static void unitario(Demo.PrinterPrx service, CallbackI callbackI) {
         // Inicializacion de variables (mensaje y userHostname)
         String userHostname = setUserHostname();
+        System.out.println("UserHostname: " + userHostname);
         System.out.println("Ingrese un mensaje para enviar al servidor: ");
         String input = scanner.nextLine();
         if (input.equals("exit"))
@@ -121,7 +145,7 @@ public class Client {
         System.out.println("Respuesta desde el server: " + response.value);
         System.out.println("Tiempo de procesamiento: " + response.responseTime);
         System.out.println("Tiempo de respuesta: " + responseTime);
-        System.out.println("Mensajes llegados al CallbackI" + callbackI.getCounter());
+        System.out.println("Mensajes llegados al CallbackI: " + callbackI.getCounter());
         stats(askForServerCount(service));
     }
 
@@ -204,8 +228,15 @@ public class Client {
             return "error";
         }
         try {
-            hostname = InetAddress.getLocalHost().getHostAddress();
+            hostname = Collections.list(NetworkInterface.getNetworkInterfaces()).stream()
+                    .flatMap(intf -> Collections.list(intf.getInetAddresses()).stream())
+                    .filter(addr -> addr.getHostAddress().startsWith("10.147.19"))
+                    .findFirst()
+                    .orElse(InetAddress.getLocalHost())
+                    .getHostAddress();
         } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (SocketException e) {
             e.printStackTrace();
         }
         return whoami + ":" + hostname + ":";
