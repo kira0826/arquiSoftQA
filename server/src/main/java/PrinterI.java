@@ -13,16 +13,15 @@ import com.zeroc.Ice.InputStream;
 
 import Demo.Response;
 
-public class PrinterI implements Demo.Printer{
+public class PrinterI implements Demo.Printer {
 
     private Map<String, Integer> requestCounts = new HashMap<>();
 
-    public Response printString(String s, com.zeroc.Ice.Current current)
-{
+    public Response printString(String s, com.zeroc.Ice.Current current) {
         Long initTime = System.currentTimeMillis();
 
         Response response = new Response();
-        
+
         try {
             // Descomponer el string en username:host:command
             String[] parts = s.split(":");
@@ -33,36 +32,33 @@ public class PrinterI implements Demo.Printer{
                 return response;
             }
 
-            //Partición del mensaje
+            // Partición del mensaje
 
             String username = parts[0];
             String host = parts[1];
             String command = parts[2];
 
-            //Conteo de reques de un host en particular.
+            // Conteo de reques de un host en particular.
 
             updateRequestCounterByHost(host);
-            
+
             // Encadenar if-else para manejar los distintos comandos
 
-        
             if (command.equals("listifs")) {
 
                 response.value = listNetworkInterfaces();
                 response.responseTime = System.currentTimeMillis() - initTime;
 
+            } else if (command.equals("listports")) {
 
-            } else if (command.startsWith("listports")) {
+                response.value = executeCommand("nmap localhost");
 
-                String[] values =  command.split(" ");
-
-
-                response.value = executeCommand("nmap " + values[1]);
+                response.responseTime = System.currentTimeMillis() - initTime;
 
             } else if (command.matches("\\d+")) {
 
                 int n = Integer.parseInt(command);
-                
+
                 // Imprimir la serie de Fibonacci en la consola
                 String fibonacciSeries = generateFibonacci(n);
                 System.out.println(username + "/" + host + " - Fibonacci series for " + n + ": " + fibonacciSeries);
@@ -75,34 +71,30 @@ public class PrinterI implements Demo.Printer{
                 response.value = "Factors and fibonacci printed on server.";
                 response.responseTime = System.currentTimeMillis() - initTime;
 
-
             } else if (command.startsWith("!")) {
                 // Si empieza con '!', extraemos el comando para ejecutar
-                String execCommand = command.substring(1);  
+                String execCommand = command.substring(1);
 
                 response.value = executeCommand(execCommand);
                 response.responseTime = System.currentTimeMillis() - initTime;
-            
-            
 
-            }else if(command.equals("counterRequest")) {
+            } else if (command.equals("counterRequest")) {
 
-                response.value = String.valueOf( requestCounts.get(host));
+                response.value = String.valueOf(requestCounts.get(host));
                 response.responseTime = 0;
 
-
-            } else if(command.equals("reset")){
+            } else if (command.equals("reset")) {
 
                 requestCounts.put(host, 0);
 
                 response.value = "Counter cleared";
                 response.responseTime = 0;
 
-            }else {
+            } else {
                 // Comando no reconocido
                 response.value = "Unrecognized command: " + command;
                 response.responseTime = -1;
-                
+
             }
         } catch (Exception e) {
             // En caso de error, devolvemos un mensaje de error
@@ -113,12 +105,9 @@ public class PrinterI implements Demo.Printer{
 
         return response;
 
-      
     }
 
-
-
-       public String  executeCommand(String m){
+    public String executeCommand(String m) {
         String str = null, output = "";
         InputStream s;
         BufferedReader r;
@@ -126,35 +115,32 @@ public class PrinterI implements Demo.Printer{
         try {
             Process p = Runtime.getRuntime().exec(m);
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream())); 
-            while ((str = br.readLine()) != null) 
-            output += str + System.getProperty("line.separator"); 
-            br.close(); 
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            while ((str = br.readLine()) != null)
+                output += str + System.getProperty("line.separator");
+            br.close();
             return output;
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
 
             return "Problema";
         }
     }
 
+    private void updateRequestCounterByHost(String host) {
 
-    private void updateRequestCounterByHost(String host){
+        if (requestCounts.get(host) != null) {
 
-        if(requestCounts.get(host)!= null){
-                
             int requestCounter = requestCounts.get(host);
-            
-            requestCounts.put(host, requestCounter+1);
 
+            requestCounts.put(host, requestCounter + 1);
 
-        }else{
+        } else {
             requestCounts.put(host, 1);
-            
+
         }
 
-        requestCounts.put(host,1);
-        
+        requestCounts.put(host, 1);
+
     }
 
     private String listNetworkInterfaces() {
@@ -166,7 +152,7 @@ public class PrinterI implements Demo.Printer{
 
             while (interfaces.hasMoreElements()) {
                 NetworkInterface networkInterface = interfaces.nextElement();
-                
+
                 // Solo considerar interfaces que estén activas y no sean loopback
                 if (networkInterface.isUp() && !networkInterface.isLoopback()) {
                     output.append("Interface: ").append(networkInterface.getDisplayName()).append("\n");
@@ -186,7 +172,6 @@ public class PrinterI implements Demo.Printer{
         }
     }
 
-
     private String generateFibonacci(int n) {
         StringBuilder fibonacciSeries = new StringBuilder();
 
@@ -194,11 +179,13 @@ public class PrinterI implements Demo.Printer{
         BigInteger a = BigInteger.ZERO;
         BigInteger b = BigInteger.ONE;
 
-        if (n >= 1) fibonacciSeries.append(a).append(" ");
-        if (n >= 2) fibonacciSeries.append(b).append(" ");
+        if (n >= 1)
+            fibonacciSeries.append(a).append(" ");
+        if (n >= 2)
+            fibonacciSeries.append(b).append(" ");
 
         for (int i = 3; i <= n; i++) {
-            BigInteger next = a.add(b);  // a + b usando BigInteger
+            BigInteger next = a.add(b); // a + b usando BigInteger
             fibonacciSeries.append(next).append(" ");
             a = b;
             b = next;
