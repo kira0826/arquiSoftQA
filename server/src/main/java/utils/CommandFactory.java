@@ -3,13 +3,7 @@ package utils;
 import java.util.HashMap;
 import java.util.Map;
 
-import commands.CounterRequestCommand;
-import commands.FibonacciAndPrimesCommand;
-import commands.ListNetworkInterfacesCommand;
-import commands.ListPortsCommands;
-import commands.ResetCommand;
-import commands.SendOneMessage;
-import commands.Command;
+import commands.*;
 
 public class CommandFactory {
 
@@ -23,6 +17,9 @@ public class CommandFactory {
         commandMap.put("counterRequest", new CounterRequestCommand(requestCounts));
         commandMap.put("reset", new ResetCommand(requestCounts));
         commandMap.put("to", new SendOneMessage());
+        commandMap.put("listclients", new ListClients());
+        commandMap.put("bc", new Broadcast());
+        commandMap.put("!", new ExceuteShellCommand());
 
     }
 

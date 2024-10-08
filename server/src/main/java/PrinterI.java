@@ -38,11 +38,9 @@ public class PrinterI implements Demo.Printer {
     public Response printString(String s, com.zeroc.Ice.Current current) {
 
         long initTime = System.currentTimeMillis();
-
-        //Register callback only if the reference is not the same as the previous one
-
-
         Response response = new Response();
+
+
 
         try {
             String[] parts = s.split(":");
@@ -52,6 +50,8 @@ public class PrinterI implements Demo.Printer {
                 return response;
             }
 
+            //Get parts of the message
+
             String username = parts[0];
             String host = parts[1];
             String commandStr = parts[2];
@@ -59,16 +59,37 @@ public class PrinterI implements Demo.Printer {
             updateRequestCounterByHost(host);
 
             Command command;
-            String[] commandArgs;
+            String[] commandArgs = new String[]{};
+
+            //Define arguments for the command
+
 
             if (commandStr.startsWith("!")) {
 
-                command = new ExceuteShellCommand();
-                commandArgs = new String[]{commandStr.substring(1)};
+                String[] partsCommand = commandStr.split(" ");
+                String[] args = Arrays.copyOfRange(partsCommand, 1, partsCommand.length);
+                commandArgs = args;
+
+            } else if (commandStr.startsWith("bc")) {
+
+                String[] partsCommand = commandStr.split(" ");
+                String[] args = Arrays.copyOfRange(partsCommand, 1, partsCommand.length);
+
+                commandArgs = args;
+
+            } else if (commandStr.startsWith("listclients")) {
+
+                String[] partsCommand = commandStr.split(" ");
+                String[] args = new String[]{};
+
+                if (partsCommand.length > 0 ){
+                    args = Arrays.copyOfRange(partsCommand, 1, partsCommand.length);
+                }
+
+                commandArgs = args;
 
             } else if (commandStr.matches("\\d+")) {
 
-                command = new FibonacciAndPrimesCommand();
                 commandArgs = new String[]{commandStr};
 
             } else if (commandStr.startsWith("to")) {
@@ -77,12 +98,10 @@ public class PrinterI implements Demo.Printer {
 
                 String[] partsCommand = commandStr.split(" ");
                 String[] args = Arrays.copyOfRange(partsCommand, 1, partsCommand.length);
-                command = commandFactory.getCommand(partsCommand[0]);
                 commandArgs = args;
 
             } else if (commandStr.startsWith("listports")) {
 
-                command = new ListPortsCommands();
                 commandArgs = commandStr.split(" ");
 
                 if (commandArgs.length < 2) {
@@ -93,25 +112,20 @@ public class PrinterI implements Demo.Printer {
 
                 commandArgs = Arrays.copyOfRange(commandArgs, 1, commandArgs.length);
 
-            } else {
-
-                command = commandFactory.getCommand(commandStr);
-                commandArgs = new String[]{};
-
             }
 
-            if (command != null) {
 
-                //Here we contemplate the reset and resquest counter commands
+            //Execute the command
+
+            try{
+                command = commandFactory.getCommand(commandStr.split(" ")[0]);
                 response = command.execute(username, host, commandArgs);
                 response.responseTime = System.currentTimeMillis() - initTime;
-
-            } else {
-
-                response.value = "Unrecognized command: " + commandStr;
+            }catch (Exception e){
+                response.value = "Error processing the command: " + e.getMessage();
                 response.responseTime = -1;
-
             }
+
 
         } catch (Exception e) {
             response.value = "Error processing the command: " + e.getMessage();
@@ -145,6 +159,8 @@ public class PrinterI implements Demo.Printer {
             //If there are pending responses, we execute that job on a thread-pool
 
             UpdateMessagesJob updateMessagesJob = new UpdateMessagesJob(pendingResponses, callBack);
+
+            //Possible unncessary threadpool.
             accumulatedMessagesProcess.execute(updateMessagesJob);
 
         }

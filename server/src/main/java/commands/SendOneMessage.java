@@ -9,13 +9,24 @@ import responses.PendingResponseManager;
 import responses.PendingResponseSequential;
 import utils.ProxiesManager;
 
+import java.util.Arrays;
+
 public class SendOneMessage implements Command {
 
     @Override
     public Response execute(String username, String hostname, String[] args) {
 
+
+        /**
+         *
+         * ARGS FORMAT: [0] = RECEIVER, [1] = message, [2] = initial sender (Optional)
+         *
+         */
+
         //Get if exist the proxy to send the message
         Response response = new Response();
+
+        String sender = args.length > 2 ? args[2] : hostname;
 
         CallBackPrx callBackPrx = ProxiesManager.getInstance().getProxy(args[0]);
 
@@ -33,8 +44,10 @@ public class SendOneMessage implements Command {
                 try {
 
                     //Report response to initial sender.
-
-                    CallBackPrx callBackPrxInitialSender = ProxiesManager.getInstance().getProxy(args[2]);
+                    System.out.println("size of args" + args.length );
+                    System.out.println("Args: " + Arrays.toString(args));
+                    System.out.println("User sender: " + sender);
+                    CallBackPrx callBackPrxInitialSender = ProxiesManager.getInstance().getProxy(sender);
                     callBackPrxInitialSender.reportResponse( confirmReceived);
                     response.value = "Message sent to " + args[0] + " and confirm received.";
 
@@ -47,7 +60,7 @@ public class SendOneMessage implements Command {
 
                     PendingResponse pendingResponse = new PendingResponse();
                     pendingResponse.setResponse(confirmReceived);
-                    PendingResponseManager.getInstance().addPendingResponse(args[2], pendingResponse);
+                    PendingResponseManager.getInstance().addPendingResponse(sender, pendingResponse);
 
 
                     response.value = "Message sent to " + args[0] + ", but do not confirm received yet.";
@@ -67,7 +80,7 @@ public class SendOneMessage implements Command {
                 //Save message to send and initial sender to confirm message process.
                 PendingResponseSequential pendingResponse = new PendingResponseSequential();
                 pendingResponse.setResponse(message);
-                pendingResponse.setInitialSender(args[2]);
+                pendingResponse.setInitialSender(sender);
                 PendingResponseManager.getInstance().addPendingResponse(args[0], pendingResponse);
 
             }
