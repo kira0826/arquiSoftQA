@@ -62,9 +62,6 @@ public class Client {
 
             adapter.activate();
 
-            Response response = null;
-
-
             if (service == null) {
                 throw new Error("Invalid proxy");
             }
