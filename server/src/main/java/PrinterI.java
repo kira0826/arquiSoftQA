@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
@@ -49,16 +50,14 @@ public class PrinterI implements Demo.Printer{
 
                 response.value = listNetworkInterfaces();
                 response.responseTime = System.currentTimeMillis() - initTime;
-                                
-
-            } else if (command.equals("listports")) {
-                
-                
-                response.value = executeCommand("nmap localhost");
-
-                response.responseTime = System.currentTimeMillis() - initTime;
 
 
+            } else if (command.startsWith("listports")) {
+
+                String[] values =  command.split(" ");
+
+
+                response.value = executeCommand("nmap " + values[1]);
 
             } else if (command.matches("\\d+")) {
 
@@ -190,13 +189,16 @@ public class PrinterI implements Demo.Printer{
 
     private String generateFibonacci(int n) {
         StringBuilder fibonacciSeries = new StringBuilder();
-        int a = 0, b = 1;
+
+        // Usar BigInteger en lugar de int
+        BigInteger a = BigInteger.ZERO;
+        BigInteger b = BigInteger.ONE;
 
         if (n >= 1) fibonacciSeries.append(a).append(" ");
         if (n >= 2) fibonacciSeries.append(b).append(" ");
 
         for (int i = 3; i <= n; i++) {
-            int next = a + b;
+            BigInteger next = a.add(b);  // a + b usando BigInteger
             fibonacciSeries.append(next).append(" ");
             a = b;
             b = next;
