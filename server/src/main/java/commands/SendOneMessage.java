@@ -16,11 +16,8 @@ public class SendOneMessage implements Command {
     @Override
     public Response execute(String username, String hostname, String[] args) {
 
-
         /**
-         *
          * ARGS FORMAT: [0] = RECEIVER, [1] = message, [2] = initial sender (Optional)
-         *
          */
 
         //Get if exist the proxy to send the message
