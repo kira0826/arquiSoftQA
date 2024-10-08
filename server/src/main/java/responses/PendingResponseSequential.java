@@ -1,6 +1,7 @@
 package responses;
 
 import Demo.CallBackPrx;
+import com.zeroc.Ice.ConnectionRefusedException;
 import utils.ProxiesManager;
 
 public class PendingResponseSequential extends PendingResponse {
@@ -13,26 +14,32 @@ public class PendingResponseSequential extends PendingResponse {
         try {
             callback.reportResponse(getResponse());
 
-            if (initialSender != null) {
+            String message = "Response was received - Content: " + getResponse();
 
-                String message = "Response sent received: " + getResponse();
+            try {
+                //Send received alert to inital sender.
+                CallBackPrx callBackPrx = ProxiesManager.getInstance().getProxy(initialSender);
+                callBackPrx.reportResponse(message);
+                System.out.println("message send to initial sender");
 
-                try {
-                    CallBackPrx callBackPrx = ProxiesManager.getInstance().getProxy(initialSender);
-                    callBackPrx.reportResponse(message);
-                } catch (Exception e) {
-                    e.printStackTrace();
+            } catch (ConnectionRefusedException e) {
+                e.printStackTrace();
+                System.out.println("User is not connected, the message will be saved.");
 
-                    //If the user is not connected, we save the response to send it when the user connects
+                //If the initial sender user is not connected, we save the response to send it when the user connects
 
-                    PendingResponse pendingResponse = new PendingResponse();
-                    pendingResponse.setResponse(message);
-                    PendingResponseManager.getInstance().addPendingResponse(initialSender, pendingResponse);
-                
-                }
+                PendingResponse pendingResponse = new PendingResponse();
+                pendingResponse.setResponse(message);
+                PendingResponseManager.getInstance().addPendingResponse(initialSender, pendingResponse);
+                return true;
+            } catch (Exception e) {
+                System.out.println("Error sending response to initial sender");
+                return false;
             }
 
         } catch (Exception e) {
+
+            e.printStackTrace();
             return false;
         }
         return true;

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import Demo.Response;
-import interfaces.Command;
 
 public class FibonacciAndPrimesCommand implements Command{
 

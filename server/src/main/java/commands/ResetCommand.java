@@ -3,7 +3,6 @@ package commands;
 import java.util.Map;
 
 import Demo.Response;
-import interfaces.Command;
 
 public class ResetCommand implements Command {
 

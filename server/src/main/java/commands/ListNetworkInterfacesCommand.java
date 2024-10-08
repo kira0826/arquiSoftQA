@@ -5,7 +5,6 @@ import java.net.NetworkInterface;
 import java.util.Enumeration;
 
 import Demo.Response;
-import interfaces.Command;
 
 public class ListNetworkInterfacesCommand implements Command {
 

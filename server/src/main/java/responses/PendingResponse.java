@@ -1,7 +1,6 @@
 package responses;
 
 import Demo.CallBackPrx;
-import interfaces.ITriggerSender;
 
 public class PendingResponse implements ITriggerSender {
 
@@ -15,10 +14,10 @@ public class PendingResponse implements ITriggerSender {
         try {
             callback.reportResponse(response);
         } catch (Exception e) {
+            System.out.println("Could not send response");
             return false;
         }
         return true;
-
     }
 
     public String getResponse() {

@@ -1,7 +1,6 @@
 package commands;
 
 import Demo.Response;
-import interfaces.Command;
 import utils.CommonCommand;
 
 public class ExceuteShellCommand implements Command{

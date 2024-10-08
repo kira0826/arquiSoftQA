@@ -13,7 +13,7 @@ import Demo.Response;
 import commands.ExceuteShellCommand;
 import commands.FibonacciAndPrimesCommand;
 import commands.ListPortsCommands;
-import interfaces.Command;
+import commands.Command;
 import responses.PendingResponse;
 import responses.PendingResponseManager;
 import responses.UpdateMessagesJob;
@@ -31,16 +31,15 @@ public class PrinterI implements Demo.Printer {
 
         requestCounts = new ConcurrentHashMap();
         commandFactory = new CommandFactory(requestCounts);
-        accumulatedMessagesProcess= Executors.newFixedThreadPool(3);
+        accumulatedMessagesProcess = Executors.newFixedThreadPool(3);
 
     }
 
     public Response printString(String s, com.zeroc.Ice.Current current) {
-       
+
         long initTime = System.currentTimeMillis();
 
         //Register callback only if the reference is not the same as the previous one
-
 
 
         Response response = new Response();
@@ -72,7 +71,7 @@ public class PrinterI implements Demo.Printer {
                 command = new FibonacciAndPrimesCommand();
                 commandArgs = new String[]{commandStr};
 
-            }else if(commandStr.startsWith("to")){
+            } else if (commandStr.startsWith("to")) {
 
                 //Forma: to <host> <message>
 
@@ -130,23 +129,22 @@ public class PrinterI implements Demo.Printer {
     @Override
     public void registerCallback(String hostname, CallBackPrx callBack, Current current) {
 
-        
+
         ProxiesManager.getInstance().addProxy(hostname, callBack);
-        System.out.println("Cliente registrado: " + hostname);
 
+        System.out.println("Total proxies registered:");
         ProxiesManager.getInstance().getAllProxies().forEach((k, v) -> {
-            System.out.println("Cliente: " + k) ;
-            System.out.println("Proxie: " + v) ;
+            System.out.println("Hostname: " + k + " | Proxy: " + v);
+        });
 
-        });     
 
-        if(PendingResponseManager.getInstance().getPendingResponses(hostname) != null){
+        //Verify if there are pending responses for the client, to do that check pending queue
+        Queue<PendingResponse> pendingResponses = PendingResponseManager.getInstance().getPendingResponses(hostname);
+        if ( pendingResponses != null && !pendingResponses.isEmpty()) {
 
-        
-            Queue<PendingResponse> pendingResponses = PendingResponseManager.getInstance().getPendingResponses(hostname);
-            
+            //If there are pending responses, we execute that job on a thread-pool
+
             UpdateMessagesJob updateMessagesJob = new UpdateMessagesJob(pendingResponses, callBack);
-            
             accumulatedMessagesProcess.execute(updateMessagesJob);
 
         }

@@ -1,5 +1,6 @@
 package responses;
 
+import java.util.Iterator;
 import java.util.Queue;
 
 import Demo.CallBackPrx;
@@ -19,10 +20,18 @@ public class UpdateMessagesJob implements Runnable {
     @Override
     public void run() {
 
-        queue.forEach((pendingResponse) -> {
+
+        Iterator<PendingResponse> iterator = queue.iterator();
+        while (iterator.hasNext()) {
+            PendingResponse pendingResponse = iterator.next();
             if (pendingResponse.triggerSender(callback)) {
-                queue.remove(pendingResponse);
+                iterator.remove();
+
+
+                System.out.println("Response was deleted: " + pendingResponse);
+            } else {
+                System.out.println("Do not delete the pending response.");
             }
-        });
+        }
     }
 }

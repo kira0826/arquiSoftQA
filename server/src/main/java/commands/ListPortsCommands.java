@@ -3,7 +3,6 @@ package commands;
 import java.io.IOException;
 
 import Demo.Response;
-import interfaces.Command;
 import utils.CommonCommand;
 
 public class ListPortsCommands implements Command{

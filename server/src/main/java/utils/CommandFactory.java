@@ -9,7 +9,7 @@ import commands.ListNetworkInterfacesCommand;
 import commands.ListPortsCommands;
 import commands.ResetCommand;
 import commands.SendOneMessage;
-import interfaces.Command;
+import commands.Command;
 
 public class CommandFactory {
 
