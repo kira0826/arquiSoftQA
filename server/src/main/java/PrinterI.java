@@ -1,5 +1,6 @@
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,13 +11,9 @@ import com.zeroc.Ice.Current;
 
 import Demo.CallBackPrx;
 import Demo.Response;
-import commands.ExceuteShellCommand;
-import commands.FibonacciAndPrimesCommand;
-import commands.ListPortsCommands;
 import commands.Command;
 import responses.PendingResponse;
 import responses.PendingResponseManager;
-import responses.UpdateMessagesJob;
 import utils.CommandFactory;
 import utils.ProxiesManager;
 
@@ -158,10 +155,18 @@ public class PrinterI implements Demo.Printer {
 
             //If there are pending responses, we execute that job on a thread-pool
 
-            UpdateMessagesJob updateMessagesJob = new UpdateMessagesJob(pendingResponses, callBack);
+            Iterator<PendingResponse> iterator = pendingResponses.iterator();
+            while (iterator.hasNext()) {
+                PendingResponse pendingResponse = iterator.next();
+                if (pendingResponse.triggerSender(callBack)) {
+                    iterator.remove();
+                    System.out.println("Response was deleted: " + pendingResponse);
+                } else {
+                    System.out.println("Do not delete the pending response.");
+                }
+            }
 
-            //Possible unncessary threadpool.
-            accumulatedMessagesProcess.execute(updateMessagesJob);
+
 
         }
 

@@ -39,7 +39,9 @@ public class Client {
 
             //Create adapter to expose the callback object
             ObjectAdapter adapter = communicator.createObjectAdapter("CallBack");
-            Demo.CallBack callBack = new CallbackI();
+
+            CallbackI callbackI = new CallbackI();
+            Demo.CallBack callBack = callbackI;
 
             //Cast the proxy to the correct type
             ObjectPrx prx = adapter.add(callBack, Util.stringToIdentity("Callback"));
@@ -57,10 +59,13 @@ public class Client {
             String temHost = scanner.nextLine();
 
             System.out.println("Hostname for proxy: " + hostnameForProxy);
+
+            //register the callback
             service.registerCallback(temHost, callBackPrx);
 
-
             adapter.activate();
+
+
 
             if (service == null) {
                 throw new Error("Invalid proxy");
@@ -74,7 +79,7 @@ public class Client {
                             System.exit(0);
                             break;
                         case 1:
-                            unitario(service);
+                            unitario(service,callbackI);
                             break;
                         case 2:
                             benchmark(service);
@@ -95,7 +100,7 @@ public class Client {
     // Modos de prueba
     // 1. Unitario
 
-    public static void unitario(Demo.PrinterPrx service) {
+    public static void unitario(Demo.PrinterPrx service, CallbackI callbackI) {
         // Inicializacion de variables (mensaje y userHostname)
         String userHostname = setUserHostname();
         System.out.println("Ingrese un mensaje para enviar al servidor: ");
@@ -116,6 +121,7 @@ public class Client {
         System.out.println("Respuesta desde el server: " + response.value);
         System.out.println("Tiempo de procesamiento: " + response.responseTime);
         System.out.println("Tiempo de respuesta: " + responseTime);
+        System.out.println("Mensajes llegados al CallbackI" + callbackI.getCounter());
         stats(askForServerCount(service));
     }
 
