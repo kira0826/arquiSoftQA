@@ -1,10 +1,9 @@
 import java.io.*;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
 
 import com.zeroc.Ice.InputStream;
 import com.zeroc.Ice.ObjectAdapter;
@@ -12,6 +11,7 @@ import com.zeroc.Ice.ObjectPrx;
 import com.zeroc.Ice.Util;
 
 import Demo.Response;
+import utils.NetworkUtils;
 
 public class Client {
 
@@ -32,7 +32,16 @@ public class Client {
         try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args, "config.client",
                 extraArgs)) {
 
-            //ICE CONFIGURATION
+            //Verify current IP
+            String ip = NetworkUtils.getLocalIPAddress();
+            System.out.println("Current IP: " + ip);
+
+
+            //Set current client server ip
+
+            communicator.getProperties().setProperty("CallBack.Endpoints", "tcp -h " +ip);
+            System.out.println(communicator.getProperties().getProperty("CallBack.Endpoints"));
+
 
             Demo.PrinterPrx service = Demo.PrinterPrx
                     .checkedCast(communicator.propertyToProxy("Printer.Proxy"));
@@ -45,33 +54,17 @@ public class Client {
             ObjectPrx prx = adapter.add(callBack, Util.stringToIdentity("Callback"));
             Demo.CallBackPrx callBackPrx = Demo.CallBackPrx.checkedCast(prx);
 
-            String hostnameForProxy = "";
-            try {
-                hostnameForProxy = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
 
-            System.out.println("Dame el identificador del proxy: ");
-            String temHost = scanner.nextLine();
-
-            System.out.println("Hostname for proxy: " + hostnameForProxy);
-            service.registerCallback(temHost, callBackPrx);
-
+            service.registerCallback(ip, callBackPrx);
 
             adapter.activate();
 
-            Response response = null;
 
-
-            if (service == null) {
-                throw new Error("Invalid proxy");
-            }
             try {
                 while (true) {
                     System.out.println("Modo de prueba:\n0. Salir\n1. Unitario\n2. Benchmark\n3. Throughput");
                     int mode = Integer.parseInt(scanner.nextLine());
+                    System.out.println("Modo seleccionado: " + mode);
                     switch (mode) {
                         case 0:
                             System.exit(0);
@@ -92,6 +85,8 @@ public class Client {
             } catch (NoSuchElementException e) {
 
             }
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -101,8 +96,12 @@ public class Client {
     public static void unitario(Demo.PrinterPrx service) {
         // Inicializacion de variables (mensaje y userHostname)
         String userHostname = setUserHostname();
+
+        System.out.println("HOSTANME UNITARIO: " + userHostname);
         System.out.println("Ingrese un mensaje para enviar al servidor: ");
         String input = scanner.nextLine();
+        System.out.println("INPUT " + input);
+
         if (input.equals("exit"))
             return;
 
@@ -200,11 +199,20 @@ public class Client {
             System.out.println("Error al obtener el usuario");
             return "error";
         }
+
         try {
-            hostname = InetAddress.getLocalHost().getHostAddress();
+            hostname = Collections.list(NetworkInterface.getNetworkInterfaces()).stream()
+                    .flatMap(intf -> Collections.list(intf.getInetAddresses()).stream())
+                    .filter(addr -> addr.getHostAddress().startsWith("10.147.19"))
+                    .findFirst()
+                    .orElse(InetAddress.getLocalHost())
+                    .getHostAddress();
         } catch (UnknownHostException e) {
             e.printStackTrace();
+        } catch (SocketException e) {
+            e.printStackTrace();
         }
+
         return whoami + ":" + hostname + ":";
 
     }
@@ -236,7 +244,7 @@ public class Client {
                 + ((sentRequestCount - serverCounter) / sentRequestCount) * 100 + "%");
         System.out.println("Porcentaje de request sin procesar: "
                 + (((sentRequestCount - receivedResponseCount) - (sentRequestCount - serverCounter))
-                        / sentRequestCount) * 100
+                / sentRequestCount) * 100
                 + "%");
         System.out.println("Jitter: " + calcularDesviacionEstandar(responseTimes));
     }

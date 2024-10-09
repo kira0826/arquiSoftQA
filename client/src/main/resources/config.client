@@ -7,7 +7,7 @@ CallBack.Endpoints = tcp -h localhost
 
 #Location
 
-Ice.Default.Host=127.0.0.1
+Ice.Default.Host=xhgrid5
 
 #Threadpool
 

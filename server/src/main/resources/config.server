@@ -1,6 +1,6 @@
 
 Printer.Endpoints=tcp -p 9099
-Ice.Default.Host=127.0.0.1
+Ice.Default.Host=xhgrid5
 Ice.ThreadPool.Server.Size=5
 
 

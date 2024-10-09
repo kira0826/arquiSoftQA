@@ -56,6 +56,8 @@ public class PrinterI implements Demo.Printer {
             String host = parts[1];
             String commandStr = parts[2];
 
+            System.out.println("HOSTNAME: " + host);
+
             updateRequestCounterByHost(host);
 
             Command command;

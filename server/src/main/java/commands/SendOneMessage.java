@@ -41,6 +41,7 @@ public class SendOneMessage implements Command {
                 try {
 
                     //Report response to initial sender.
+
                     System.out.println("size of args" + args.length );
                     System.out.println("Args: " + Arrays.toString(args));
                     System.out.println("User sender: " + sender);
