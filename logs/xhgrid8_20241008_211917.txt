@@ -1,0 +1,77 @@
+[xhgrid8] 2024-10-08 21:19:17 - Iniciando proceso...
+[xhgrid8] 2024-10-08 21:19:17 - Asegurando que el directorio /home/computacion/Documents/RicardoUrbina existe...
+[xhgrid8] 2024-10-08 21:19:18 - Transfiriendo ./client/build/libs/client.jar a xhgrid8...
+[xhgrid8] 2024-10-08 21:19:18 - Ejecutando client.jar con 1000 peticiones...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.15.0-76-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Tue Oct  8 09:19:17 PM -05 2024
+
+  System load:                 0.0390625
+  Usage of /home:              13.9% of 814.38GB
+  Memory usage:                11%
+  Swap usage:                  4%
+  Temperature:                 52.0 C
+  Processes:                   482
+  Users logged in:             4
+  IPv4 address for docker0:    172.17.0.1
+  IPv4 address for enp1s0f0:   192.168.131.128
+  IPv4 address for enp1s0f1:   192.168.7.128
+  IPv4 address for ztzlgphedh: 10.147.19.137
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+1 device has a firmware upgrade available.
+Run `fwupdmgr get-upgrades` for more information.
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+573 updates can be applied immediately.
+390 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+5 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+New release '24.04.1 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+
+1 device has a firmware upgrade available.
+Run `fwupdmgr get-upgrades` for more information.
+
+[] Ejecutando petición 1 de 1000
+Current IP: 10.147.19.137
+tcp -h 10.147.19.137
+Modo de prueba:
+0. Salir
+1. Unitario
+2. Benchmark
+3. Throughput
+Modo seleccionado: 1
+HOSTANME UNITARIO: computacion:10.147.19.137:
+Ingrese un mensaje para enviar al servidor: 
+INPUT to xhgrid7 mensajito
+Respuesta desde el server: 
+Tiempo de procesamiento: 1
+Tiempo de respuesta: 3
+Cantidad de request enviados: 1
+Cantidad de request recibidos: 1
+Cantidad de request perdidos: -800%
+Porcentaje de request sin procesar: 800%
+Jitter: 0.0
+Modo de prueba:
+0. Salir
+1. Unitario
+2. Benchmark
+3. Throughput
+[xhgrid8] 2024-10-08 21:19:20 - Error al ejecutar client.jar.

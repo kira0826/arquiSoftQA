@@ -1,0 +1,128 @@
+[xhgrid7] 2024-10-08 21:19:30 - Iniciando proceso...
+[xhgrid7] 2024-10-08 21:19:30 - Asegurando que el directorio /home/computacion/Documents/RicardoUrbina existe...
+[xhgrid7] 2024-10-08 21:19:30 - Transfiriendo ./client/build/libs/client.jar a xhgrid7...
+[xhgrid7] 2024-10-08 21:19:30 - Ejecutando client.jar con 1000 peticiones...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-122-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+  System information as of Tue Oct  8 09:19:17 PM -05 2024
+
+  System load:                 0.046875
+  Usage of /home:              14.0% of 814.38GB
+  Memory usage:                11%
+  Swap usage:                  0%
+  Temperature:                 56.0 C
+  Processes:                   466
+  Users logged in:             3
+  IPv4 address for docker0:    172.17.0.1
+  IPv4 address for enp1s0f0:   192.168.131.127
+  IPv4 address for enp1s0f1:   192.168.7.127
+  IPv4 address for ztzlgphedh: 10.147.19.139
+
+  => There is 1 zombie process.
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+1 device has a firmware upgrade available.
+Run `fwupdmgr get-upgrades` for more information.
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+136 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+6 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+New release '24.04.1 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+
+1 device has a firmware upgrade available.
+Run `fwupdmgr get-upgrades` for more information.
+
+[] Ejecutando petición 1 de 1000
+Current IP: 10.147.19.139
+tcp -h 10.147.19.139
+Modo de prueba:
+0. Salir
+1. Unitario
+2. Benchmark
+3. Throughput
+Modo seleccionado: 1
+HOSTANME UNITARIO: computacion:10.147.19.139:
+Ingrese un mensaje para enviar al servidor: 
+INPUT to xhgrid7 mensajito
+Respuesta desde el server: 
+Tiempo de procesamiento: 0
+Tiempo de respuesta: 3
+Cantidad de request enviados: 1
+Cantidad de request recibidos: 1
+Cantidad de request perdidos: -900%
+Porcentaje de request sin procesar: 900%
+Jitter: 0.0
+Modo de prueba:
+0. Salir
+1. Unitario
+2. Benchmark
+3. Throughput
+[] Ejecutando petición 2 de 1000
+Current IP: 10.147.19.139
+tcp -h 10.147.19.139
+Modo de prueba:
+0. Salir
+1. Unitario
+2. Benchmark
+3. Throughput
+Modo seleccionado: 1
+HOSTANME UNITARIO: computacion:10.147.19.139:
+Ingrese un mensaje para enviar al servidor: 
+INPUT to xhgrid7 mensajito
+Respuesta desde el server: 
+Tiempo de procesamiento: 0
+Tiempo de respuesta: 3
+Cantidad de request enviados: 1
+Cantidad de request recibidos: 1
+Cantidad de request perdidos: -1200%
+Porcentaje de request sin procesar: 1200%
+Jitter: 0.0
+Modo de prueba:
+0. Salir
+1. Unitario
+2. Benchmark
+3. Throughput
+[] Ejecutando petición 3 de 1000
+Current IP: 10.147.19.139
+tcp -h 10.147.19.139
+Modo de prueba:
+0. Salir
+1. Unitario
+2. Benchmark
+3. Throughput
+Modo seleccionado: 1
+HOSTANME UNITARIO: computacion:10.147.19.139:
+Ingrese un mensaje para enviar al servidor: 
+INPUT to xhgrid7 mensajito
+Respuesta desde el server: 
+Tiempo de procesamiento: 0
+Tiempo de respuesta: 4
+Cantidad de request enviados: 1
+Cantidad de request recibidos: 1
+Cantidad de request perdidos: -1500%
+Porcentaje de request sin procesar: 1500%
+Jitter: 0.0
+Modo de prueba:
+0. Salir
+1. Unitario
+2. Benchmark
+3. Throughput
+[xhgrid7] 2024-10-08 21:19:43 - Proceso completado en xhgrid7 con 1000 peticiones.

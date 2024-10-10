@@ -85,6 +85,7 @@ public class Client {
             } catch (NoSuchElementException e) {
 
             }
+            communicator.waitForShutdown();
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
