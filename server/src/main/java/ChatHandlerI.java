@@ -12,7 +12,7 @@ import responses.PendingResponseSequential;
 import responses.UpdateMessagesJob;
 import utils.ProxiesManager;
 
-public class ChatHandler implements Demo.ChatHandler {
+public class ChatHandlerI implements Demo.ChatHandler {
 
     // Inicializar el ExecutorService con un pool fijo basado en los núcleos disponibles
     private final ExecutorService executorService = Executors.newFixedThreadPool(

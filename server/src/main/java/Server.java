@@ -20,7 +20,7 @@ public class Server {
             adapter.activate();
 
             ObjectAdapter chatHandlerAdapter = communicator.createObjectAdapter("ChatHandler");
-            ChatHandler chatHandlerObject = new ChatHandler(); // La clase que implementa ChatHandler
+            ChatHandlerI chatHandlerObject = new ChatHandlerI(); // La clase que implementa ChatHandler
             chatHandlerAdapter.add(chatHandlerObject, com.zeroc.Ice.Util.stringToIdentity("SimpleChatHandler"));
             chatHandlerAdapter.activate();
 
