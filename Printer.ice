@@ -7,17 +7,41 @@ module Demo
     
 
     interface CallBack
+
     {
-        string reportResponse(string msg);
+        void reportResponse(Response response);
     }
 
+    interface ChatHandler
+
+    {
+        
+        Response registerCallback(string hostname, CallBack* callBack);
+        
+        Response sendOneMessage(string hostname, string receiver,  string message);
+
+        Response broadcast(string hostname, string message);
+
+        Response listClients(string hostname);
+
+    }
+
+
     interface Printer
-    
     {
 
-        void registerCallback(string hostname, CallBack* callBack);
-        Response printString(string s);
+        Response counterRequestCommand(string hostname);
 
+        Response exceuteShellCommand(string hostname, string command);
+
+        Response FibonacciAndPrimesCommand(string hostname, int number);
+
+        Response listNetworkInterfacesCommand(string hostname );
+
+        Response listPortsCommands(string hostname, string ip);
+
+        Response resetCommand(string hostname);
+        
     }
 
 }

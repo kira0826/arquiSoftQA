@@ -1,18 +1,20 @@
 import com.zeroc.Ice.Current;
 
+import Demo.Response;
+
 public class CallbackI  implements Demo.CallBack{
 
     private int count = 0;
 
     @Override
-    public String reportResponse(String msg, Current current) {
+    public void reportResponse(Response response, Current current) {
+        // TODO Auto-generated method stub
         
-        count++;
-        System.out.println("Callback received: " + msg + " | Count: " + count);
-        System.out.println("Server response: " + msg);
-        return "Server response: " + msg;
     }
 
+  
+
+   
 
 
     

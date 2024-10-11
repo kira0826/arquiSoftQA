@@ -1,15 +1,18 @@
 package responses;
 
 import Demo.CallBackPrx;
+import Demo.Response;
 
 public class PendingResponse implements ITriggerSender {
 
-
-
-    private String response;
+    private String responseMessage;
 
     @Override
     public boolean triggerSender(CallBackPrx callback) {
+
+        Response response = new Response();
+
+        response.value = responseMessage;
 
         try {
             callback.reportResponse(response);
@@ -20,14 +23,12 @@ public class PendingResponse implements ITriggerSender {
         return true;
     }
 
-    public String getResponse() {
-        return response;
+    public String getResponseMessage() {
+        return responseMessage;
     }
 
-    public void setResponse(String response) {
-        this.response = response;
+    public void setResponseMessage(String response) {
+        this.responseMessage = response;
     }
 
-
-    
 }

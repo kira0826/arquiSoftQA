@@ -15,6 +15,7 @@ public class Server {
             }
             com.zeroc.Ice.ObjectAdapter adapter = communicator.createObjectAdapter("Printer");
             com.zeroc.Ice.Object object = new PrinterI();
+            //FALTA EXPONER EL CHATSERVER.
             adapter.add(object, com.zeroc.Ice.Util.stringToIdentity("SimplePrinter"));
             adapter.activate();
             communicator.waitForShutdown();

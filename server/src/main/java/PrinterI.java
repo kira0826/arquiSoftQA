@@ -1,139 +1,114 @@
 
-import java.util.Arrays;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import com.zeroc.Ice.Current;
+import com.zeroc.Ice.InputStream;
 
-import Demo.CallBackPrx;
 import Demo.Response;
-import commands.ExceuteShellCommand;
-import commands.FibonacciAndPrimesCommand;
-import commands.ListPortsCommands;
-import commands.Command;
-import responses.PendingResponse;
-import responses.PendingResponseManager;
-import responses.UpdateMessagesJob;
-import utils.CommandFactory;
-import utils.ProxiesManager;
 
 public class PrinterI implements Demo.Printer {
 
-
-    ExecutorService accumulatedMessagesProcess;
     private Map<String, Integer> requestCounts;
-    private CommandFactory commandFactory;
 
     public PrinterI() {
 
         requestCounts = new ConcurrentHashMap();
-        commandFactory = new CommandFactory(requestCounts);
-        accumulatedMessagesProcess = Executors.newFixedThreadPool(3);
+
+    }
+    
+    @Override
+    public Response FibonacciAndPrimesCommand(String hostname, int number, Current current) {
+
+        Response response = new Response();
+
+        // Imprimir la serie de Fibonacci en la consola
+        String fibonacciSeries = generateFibonacci(number);
+
+        System.out.println("Fibonacci series for " + number + ": " + fibonacciSeries);
+
+        // Calcular los factores primos de n y devolverlos como respuesta
+        List<Integer> primeFactors = getPrimeFactors(number);
+        String factores = "Prime factors of " + number + ": " + primeFactors.toString() + "/n";
+        System.out.println(factores);
+        response.value = "Factors and fibonacci printed on server.";
+        updateRequestCounterByHost(hostname);
+
+        return response;
 
     }
 
-    public Response printString(String s, com.zeroc.Ice.Current current) {
+    @Override
+    public Response counterRequestCommand(String hostname, Current current) {
 
-        long initTime = System.currentTimeMillis();
         Response response = new Response();
+        response.value = String.valueOf(requestCounts.getOrDefault(hostname, 0));
+        response.responseTime = 0;
 
+        updateRequestCounterByHost(hostname);
 
+        return response;
+
+    }
+
+    @Override
+    public Response exceuteShellCommand(String hostname, String command, Current current) {
+        Response response = new Response();
+        try {
+            response.value = executeCommand(command);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        updateRequestCounterByHost(hostname);
+        return response;
+    }
+
+    @Override
+    public Response listNetworkInterfacesCommand(String hostname, Current current) {
+        Response response = new Response(); 
 
         try {
-            String[] parts = s.split(":");
-            if (parts.length != 3) {
-                response.responseTime = System.currentTimeMillis() - initTime;
-                response.value = "Invalid message format. Expected format: 'username:host:command'";
-                return response;
-            }
-
-            //Get parts of the message
-
-            String username = parts[0];
-            String host = parts[1];
-            String commandStr = parts[2];
-
-            System.out.println("HOSTNAME: " + host);
-
-            updateRequestCounterByHost(host);
-
-            Command command;
-            String[] commandArgs = new String[]{};
-
-            //Define arguments for the command
-
-
-            if (commandStr.startsWith("!")) {
-
-                String[] partsCommand = commandStr.split(" ");
-                String[] args = Arrays.copyOfRange(partsCommand, 1, partsCommand.length);
-                commandArgs = args;
-
-            } else if (commandStr.startsWith("bc")) {
-
-                String[] partsCommand = commandStr.split(" ");
-                String[] args = Arrays.copyOfRange(partsCommand, 1, partsCommand.length);
-
-                commandArgs = args;
-
-            } else if (commandStr.startsWith("listclients")) {
-
-                String[] partsCommand = commandStr.split(" ");
-                String[] args = new String[]{};
-
-                if (partsCommand.length > 0 ){
-                    args = Arrays.copyOfRange(partsCommand, 1, partsCommand.length);
-                }
-
-                commandArgs = args;
-
-            } else if (commandStr.matches("\\d+")) {
-
-                commandArgs = new String[]{commandStr};
-
-            } else if (commandStr.startsWith("to")) {
-
-                //Forma: to <host> <message>
-
-                String[] partsCommand = commandStr.split(" ");
-                String[] args = Arrays.copyOfRange(partsCommand, 1, partsCommand.length);
-                commandArgs = args;
-
-            } else if (commandStr.startsWith("listports")) {
-
-                commandArgs = commandStr.split(" ");
-
-                if (commandArgs.length < 2) {
-                    response.value = "IP address required for listports command.";
-                    response.responseTime = -1;
-                    return response;
-                }
-
-                commandArgs = Arrays.copyOfRange(commandArgs, 1, commandArgs.length);
-
-            }
-
-
-            //Execute the command
-
-            try{
-                command = commandFactory.getCommand(commandStr.split(" ")[0]);
-                response = command.execute(username, host, commandArgs);
-                response.responseTime = System.currentTimeMillis() - initTime;
-            }catch (Exception e){
-                response.value = "Error processing the command: " + e.getMessage();
-                response.responseTime = -1;
-            }
-
-
-        } catch (Exception e) {
-            response.value = "Error processing the command: " + e.getMessage();
-            response.responseTime = -1;
+            response.value = listNetworkInterfaces();
+        } catch (java.net.SocketException e) {
+            
+            e.printStackTrace();
+            return null;
         }
+        updateRequestCounterByHost(hostname);
 
+
+        return response;
+    
+    }
+
+    @Override
+    public Response listPortsCommands(String hostname, String ip, Current current) {
+        Response response = new Response();
+        try {
+            response.value = executeCommand("nmap " + ip);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        updateRequestCounterByHost(hostname);
+        return response;
+    }
+
+    @Override
+    public Response resetCommand(String hostname, Current current) {
+        Response response = new Response();
+        requestCounts.put(hostname, 0);
+        response.value = "Counter cleared";
+        response.responseTime = 0;
         return response;
     }
 
@@ -141,33 +116,92 @@ public class PrinterI implements Demo.Printer {
         requestCounts.put(host, requestCounts.getOrDefault(host, 0) + 1);
     }
 
+    private static String executeCommand(String m) throws IOException {
+        String str = null, output = "";
+        InputStream s;
+        BufferedReader r;
 
-    @Override
-    public void registerCallback(String hostname, CallBackPrx callBack, Current current) {
+        Process p = Runtime.getRuntime().exec(m);
 
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        while ((str = br.readLine()) != null) {
+            output += str + System.getProperty("line.separator");
+        }
+        br.close();
+        return output;
+    }
 
-        ProxiesManager.getInstance().addProxy(hostname, callBack);
+    private String generateFibonacci(int n) {
+        StringBuilder fibonacciSeries = new StringBuilder();
+        int a = 0, b = 1;
 
-        System.out.println("Total proxies registered:");
-        ProxiesManager.getInstance().getAllProxies().forEach((k, v) -> {
-            System.out.println("Hostname: " + k + " | Proxy: " + v);
-        });
-
-
-        //Verify if there are pending responses for the client, to do that check pending queue
-        Queue<PendingResponse> pendingResponses = PendingResponseManager.getInstance().getPendingResponses(hostname);
-        if ( pendingResponses != null && !pendingResponses.isEmpty()) {
-
-            //If there are pending responses, we execute that job on a thread-pool
-
-            UpdateMessagesJob updateMessagesJob = new UpdateMessagesJob(pendingResponses, callBack);
-
-            //Possible unncessary threadpool.
-            accumulatedMessagesProcess.execute(updateMessagesJob);
-
+        if (n >= 1) {
+            fibonacciSeries.append(a).append(" ");
+        }
+        if (n >= 2) {
+            fibonacciSeries.append(b).append(" ");
         }
 
+        for (int i = 3; i <= n; i++) {
+            int next = a + b;
+            fibonacciSeries.append(next).append(" ");
+            a = b;
+            b = next;
+        }
+
+        return fibonacciSeries.toString();
+    }
+
+    private String listNetworkInterfaces() throws java.net.SocketException {
+        StringBuilder output = new StringBuilder();
+
+        // Get network interfaces
+        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface networkInterface = interfaces.nextElement();
+
+            // Get actives interfaces that are not loopback.
+            if (networkInterface.isUp() && !networkInterface.isLoopback()) {
+                output.append("Interface: ").append(networkInterface.getDisplayName()).append("\n");
+
+                // Get addresses for the current interface
+                Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress address = addresses.nextElement();
+                    output.append("  Address: ").append(address.getHostAddress()).append("\n");
+                }
+            }
+        }
+
+        return output.toString();
 
     }
 
+    // Método para obtener los factores primos de un número
+    private List<Integer> getPrimeFactors(int n) {
+        List<Integer> primeFactors = new ArrayList<>();
+
+        // Dividir n por 2 mientras sea divisible
+        while (n % 2 == 0) {
+            primeFactors.add(2);
+            n /= 2;
+        }
+
+        // Dividir n por números impares
+        for (int i = 3; i <= Math.sqrt(n); i += 2) {
+            while (n % i == 0) {
+                primeFactors.add(i);
+                n /= i;
+            }
+        }
+
+        // Si n es un número primo mayor que 2
+        if (n > 2) {
+            primeFactors.add(n);
+        }
+
+        return primeFactors;
+    }
+    
 }

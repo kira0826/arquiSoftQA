@@ -15,6 +15,8 @@ import utils.NetworkUtils;
 
 public class Client {
 
+    /* 
+
     private static Scanner scanner = new Scanner(System.in);
 
     private static List<Long> processingTimes = new ArrayList<Long>();
@@ -54,8 +56,9 @@ public class Client {
             ObjectPrx prx = adapter.add(callBack, Util.stringToIdentity("Callback"));
             Demo.CallBackPrx callBackPrx = Demo.CallBackPrx.checkedCast(prx);
 
+            
 
-            service.registerCallback(ip, callBackPrx);
+            //  service.registerCallback(ip, callBackPrx);
 
             adapter.activate();
 
@@ -95,6 +98,8 @@ public class Client {
     // 1. Unitario
 
     public static void unitario(Demo.PrinterPrx service) {
+
+        
         // Inicializacion de variables (mensaje y userHostname)
         String userHostname = setUserHostname();
 
@@ -310,4 +315,6 @@ public class Client {
         }
         return response;
     }
+
+    */
 }
