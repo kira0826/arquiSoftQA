@@ -8,7 +8,9 @@ public class CallbackI  implements Demo.CallBack{
 
     @Override
     public void reportResponse(Response response, Current current) {
-        // TODO Auto-generated method stub
+        
+
+        System.out.println(response.value);
         
     }
 

@@ -55,6 +55,9 @@ public class Client {
             ObjectPrx prx = adapter.add(callBack, Util.stringToIdentity("Callback"));
             Demo.CallBackPrx callBackPrx = Demo.CallBackPrx.checkedCast(prx);
 
+
+            chatService.registerCallback(ip, callBackPrx);
+
             // service.registerCallback(ip, callBackPrx);
 
             adapter.activate();

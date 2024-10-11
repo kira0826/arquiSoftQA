@@ -15,11 +15,10 @@ public class Server {
             }
             com.zeroc.Ice.ObjectAdapter adapter = communicator.createObjectAdapter("Printer");
             com.zeroc.Ice.Object object = new PrinterI();
-            //FALTA EXPONER EL CHATSERVER.
             adapter.add(object, com.zeroc.Ice.Util.stringToIdentity("SimplePrinter"));
             adapter.activate();
 
-            ObjectAdapter chatHandlerAdapter = communicator.createObjectAdapter("ChatHandler");
+            com.zeroc.Ice.ObjectAdapter chatHandlerAdapter = communicator.createObjectAdapter("ChatHandler");
             ChatHandlerI chatHandlerObject = new ChatHandlerI(); // La clase que implementa ChatHandler
             chatHandlerAdapter.add(chatHandlerObject, com.zeroc.Ice.Util.stringToIdentity("SimpleChatHandler"));
             chatHandlerAdapter.activate();
