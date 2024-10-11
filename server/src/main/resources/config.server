@@ -1,6 +1,9 @@
 
-Printer.Endpoints=tcp -p 9099
+Printer.Endpoints=tcp -p 30002
+ChatHandler.Endpoints=tcp -p 28700
+
 Ice.Default.Host=xhgrid5
-Ice.ThreadPool.Server.Size=5
+Ice.ThreadPool.Server.Size=4
+
 
 

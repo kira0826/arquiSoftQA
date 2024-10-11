@@ -1,4 +1,4 @@
-import java.io.*;
+import com.zeroc.Ice.ObjectAdapter;
 
 public class Server {
 
@@ -18,6 +18,12 @@ public class Server {
             //FALTA EXPONER EL CHATSERVER.
             adapter.add(object, com.zeroc.Ice.Util.stringToIdentity("SimplePrinter"));
             adapter.activate();
+
+            ObjectAdapter chatHandlerAdapter = communicator.createObjectAdapter("ChatHandler");
+            ChatHandler chatHandlerObject = new ChatHandler(); // La clase que implementa ChatHandler
+            chatHandlerAdapter.add(chatHandlerObject, com.zeroc.Ice.Util.stringToIdentity("SimpleChatHandler"));
+            chatHandlerAdapter.activate();
+
             communicator.waitForShutdown();
         }
     }

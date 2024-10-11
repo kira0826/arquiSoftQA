@@ -13,7 +13,6 @@ public class PendingResponseManager {
         pendingResponses = new ConcurrentHashMap<>();
     }
 
-
     public static synchronized PendingResponseManager getInstance() {
         if (instance == null) {
             instance = new PendingResponseManager();

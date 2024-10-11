@@ -1,5 +1,6 @@
-
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.zeroc.Ice.Current;
 
@@ -13,198 +14,209 @@ import utils.ProxiesManager;
 
 public class ChatHandler implements Demo.ChatHandler {
 
+    // Inicializar el ExecutorService con un pool fijo basado en los núcleos disponibles
+    private final ExecutorService executorService = Executors.newFixedThreadPool(
+        Runtime.getRuntime().availableProcessors()
+    );
+
     @Override
     public Response broadcast(String hostname, String message, Current current) {
-
+        // Crear una respuesta inmediata
         Response response = new Response();
+        response.value = "Broadcast solicitado. Procesando en segundo plano.";
 
-        ProxiesManager.getInstance().getAllProxies().forEach((k, v) -> {
+        // Enviar la tarea al thread pool
+        executorService.execute(() -> {
+            try {
+                ProxiesManager.getInstance().getAllProxies().forEach((k, v) -> {
+                    CallBackPrx callBackPrx = v;
 
-            CallBackPrx callBackPrx = v;
+                    if (callBackPrx != null) {
+                        String messageResponse = "Message from: " + hostname + " | Message: " + message;
+                        Response innerResponse = new Response();
+                        innerResponse.value = messageResponse;
 
-            if (callBackPrx != null) {
+                        try {
+                            // Enviar el mensaje
+                            callBackPrx.reportResponse(innerResponse);
 
-                String messageResponse = "Message from: " + hostname + " | Message:";
-                response.value = messageResponse;
+                            String confirmReceived = "Response was received - Content: " + message + " | sent to: " + k + "\n";
 
-                try {
+                            try {
+                                CallBackPrx callBackPrxInitialSender = ProxiesManager.getInstance().getProxy(hostname);
+                                innerResponse.value = confirmReceived;
+                                callBackPrxInitialSender.reportResponse(innerResponse);
+                            } catch (Exception e) {
+                                // Si el remitente inicial no está conectado
+                                System.out.println("Error al enviar confirmación al remitente inicial.");
+                                e.printStackTrace();
 
-                    //Send message.
-                    callBackPrx.reportResponse(response);
+                                PendingResponse pendingResponse = new PendingResponse();
+                                pendingResponse.setResponseMessage(confirmReceived);
+                                PendingResponseManager.getInstance().addPendingResponse(hostname, pendingResponse);
+                            }
 
-                    String confirmReceived = "Response was received - Content:" + message + " | send to: " + k + "\n ";
+                        } catch (Exception e) {
+                            // Si el receptor no está conectado
+                            System.out.println("Error al enviar mensaje a " + k + " - En: broadcast");
+                            e.printStackTrace();
 
-                    try {
+                            innerResponse.value = "Error al enviar mensaje a " + k;
 
-                        CallBackPrx callBackPrxInitialSender = ProxiesManager.getInstance().getProxy(hostname);
-                        response.value = confirmReceived;
-                        callBackPrxInitialSender.reportResponse(response);
-
-                    } catch (Exception e) {
-
-                        // If intial sender is not connected.
-                        System.out.println("Error sending confirm received for initial sender.");
-                        e.printStackTrace();
-
-                        PendingResponse pendingResponse = new PendingResponse();
-                        pendingResponse.setResponseMessage(confirmReceived);
-                        PendingResponseManager.getInstance().addPendingResponse(hostname, pendingResponse);
-
+                            // Guardar el mensaje para reintentar
+                            PendingResponseSequential pendingResponse = new PendingResponseSequential();
+                            pendingResponse.setResponseMessage(messageResponse);
+                            pendingResponse.setInitialSender(hostname);
+                            PendingResponseManager.getInstance().addPendingResponse(k, pendingResponse);
+                        }
                     }
-
-                } catch (Exception e) {
-
-                    //If the receiver is not connected.
-                    System.out.println("Error sending message to " + k + " - On: SendOneMessage");
-                    e.printStackTrace();
-
-                    response.value = "Error sending message to " + k;
-
-                    //Save message to send and initial sender to confirm message process.
-                    PendingResponseSequential pendingResponse = new PendingResponseSequential();
-                    pendingResponse.setResponseMessage(messageResponse);
-                    pendingResponse.setInitialSender(hostname);
-                    PendingResponseManager.getInstance().addPendingResponse(k, pendingResponse);
-
-                }
+                });
+            } catch (Exception e) {
+                // Manejo de excepciones generales
+                System.out.println("Error en el proceso de broadcast.");
+                e.printStackTrace();
             }
-
         });
 
-        response.value = "Broadcast done";
         return response;
     }
 
     @Override
     public Response listClients(String hostname, Current current) {
-
         Response response = new Response();
+        response.value = "ListClients solicitado. Procesando en segundo plano.";
 
-        CallBackPrx callBackPrx;
-
-        callBackPrx = ProxiesManager.getInstance().getProxy(hostname);
-
-        if (callBackPrx != null) {
-
-            String message = ProxiesManager.getInstance().getAllProxies().toString();
-
+        executorService.execute(() -> {
             try {
+                CallBackPrx callBackPrx = ProxiesManager.getInstance().getProxy(hostname);
 
-                response.value = message;
-                callBackPrx.reportResponse(response);
+                if (callBackPrx != null) {
+                    String message = ProxiesManager.getInstance().getAllProxies().toString();
 
-                response.value = "List clients process sent ";
+                    try {
+                        Response innerResponse = new Response();
+                        innerResponse.value = message;
+                        callBackPrx.reportResponse(innerResponse);
 
+                        innerResponse.value = "Proceso de listClients enviado.";
+                    } catch (Exception e) {
+                        // Si el receptor no está conectado
+                        System.out.println("Error al enviar lista de clientes, " + hostname + " está desconectado.");
+                        e.printStackTrace();
+
+                        Response errorResponse = new Response();
+                        errorResponse.value = "Error al enviar mensaje a " + hostname;
+
+                        // Guardar el mensaje para reintentar
+                        PendingResponse pendingResponse = new PendingResponseSequential();
+                        pendingResponse.setResponseMessage(message);
+                        PendingResponseManager.getInstance().addPendingResponse(hostname, pendingResponse);
+                    }
+                }
             } catch (Exception e) {
-
-                //If the receiver is not connected.
-                System.out.println("Error sending message," + hostname + "is disconnect.");
+                // Manejo de excepciones generales
+                System.out.println("Error en el proceso de listClients.");
                 e.printStackTrace();
-                response.value = "Error sending message to " + hostname;
-                //Save message to send and initial sender to confirm message process.
-                PendingResponse pendingResponse = new PendingResponseSequential();
-                pendingResponse.setResponseMessage(message);
-
-                PendingResponseManager.getInstance().addPendingResponse(hostname, pendingResponse);
-
             }
-        }
+        });
 
         return response;
-
     }
 
     @Override
     public Response registerCallback(String hostname, CallBackPrx callBack, Current current) {
-
         Response response = new Response();
+        response.value = "RegisterCallback solicitado. Procesando en segundo plano.";
 
-        ProxiesManager.getInstance().addProxy(hostname, callBack);
+        executorService.execute(() -> {
+            try {
+                ProxiesManager.getInstance().addProxy(hostname, callBack);
 
-        System.out.println("Total proxies registered:");
-        ProxiesManager.getInstance().getAllProxies().forEach((k, v) -> {
-            System.out.println("Hostname: " + k + " | Proxy: " + v);
+                System.out.println("Total de proxies registrados:");
+                ProxiesManager.getInstance().getAllProxies().forEach((k, v) -> {
+                    System.out.println("Hostname: " + k + " | Proxy: " + v);
+                });
+
+                // Verificar si hay respuestas pendientes para el cliente
+                Queue<PendingResponse> pendingResponses = PendingResponseManager.getInstance().getPendingResponses(hostname);
+                if (pendingResponses != null && !pendingResponses.isEmpty()) {
+                    // Ejecutar el trabajo de actualización en el thread pool
+                    UpdateMessagesJob updateMessagesJob = new UpdateMessagesJob(pendingResponses, callBack);
+                    executorService.execute(updateMessagesJob);
+                }
+            } catch (Exception e) {
+                // Manejo de excepciones generales
+                System.out.println("Error en el proceso de registerCallback.");
+                e.printStackTrace();
+            }
         });
 
-        //Verify if there are pending responses for the client, to do that check pending queue
-        Queue<PendingResponse> pendingResponses = PendingResponseManager.getInstance().getPendingResponses(hostname);
-        if (pendingResponses != null && !pendingResponses.isEmpty()) {
-
-            //If there are pending responses, we execute that job on a thread-pool
-            UpdateMessagesJob updateMessagesJob = new UpdateMessagesJob(pendingResponses, callBack);
-
-            //Possible unncessary threadpool.
-            //accumulatedMessagesProcess.execute(updateMessagesJob);
-        }
         return response;
     }
 
     @Override
     public Response sendOneMessage(String hostname, String receiver, String message, Current current) {
-
-        /**
-         * ARGS FORMAT: [0] = RECEIVER, [1] = message, [2] = initial sender
-         * (Optional)
-         */
-        //Get if exist the proxy to send the message
         Response response = new Response();
+        response.value = "SendOneMessage solicitado. Procesando en segundo plano.";
 
-        CallBackPrx callBackPrx = ProxiesManager.getInstance().getProxy(receiver);
-
-        if (callBackPrx != null) {
-
-            String messageResponse = "Message from: " + hostname + " | Message:" + receiver;
-
+        executorService.execute(() -> {
             try {
-                response.value = messageResponse;
-                //Send message.
-                callBackPrx.reportResponse(response);
+                CallBackPrx callBackPrx = ProxiesManager.getInstance().getProxy(receiver);
 
-                String confirmReceived = "Response was received - Content:" + message + " | send to: " + receiver + "\n ";
+                if (callBackPrx != null) {
+                    String messageResponse = "Message from: " + hostname + " | Message: " + message;
+                    Response innerResponse = new Response();
+                    innerResponse.value = messageResponse;
 
-                try {
+                    try {
+                        // Enviar el mensaje
+                        callBackPrx.reportResponse(innerResponse);
 
-                    //Report response to initial sender.
-                    CallBackPrx callBackPrxInitialSender = ProxiesManager.getInstance().getProxy(hostname);
-                    response.value = confirmReceived;
-                    callBackPrxInitialSender.reportResponse(response);
+                        String confirmReceived = "Response was received - Content: " + message + " | sent to: " + receiver + "\n";
 
-                    return response;
+                        try {
+                            // Reportar la respuesta al remitente inicial
+                            CallBackPrx callBackPrxInitialSender = ProxiesManager.getInstance().getProxy(hostname);
+                            innerResponse.value = confirmReceived;
+                            callBackPrxInitialSender.reportResponse(innerResponse);
+                        } catch (Exception e) {
+                            // Si el remitente inicial no está conectado
+                            System.out.println("Error al enviar confirmación al remitente inicial.");
+                            e.printStackTrace();
 
-                } catch (Exception e) {
+                            PendingResponse pendingResponse = new PendingResponse();
+                            pendingResponse.setResponseMessage(confirmReceived);
+                            PendingResponseManager.getInstance().addPendingResponse(hostname, pendingResponse);
 
-                    // If intial sender is not connected.
-                    System.out.println("Error sending confirm received for initial sender.");
-                    e.printStackTrace();
+                            // Actualizar la respuesta si es necesario
+                        }
 
-                    PendingResponse pendingResponse = new PendingResponse();
-                    pendingResponse.setResponseMessage(confirmReceived);
-                    PendingResponseManager.getInstance().addPendingResponse(hostname, pendingResponse);
+                    } catch (Exception e) {
+                        // Si el receptor no está conectado
+                        System.out.println("Error al enviar mensaje a " + receiver + " - En: sendOneMessage");
+                        e.printStackTrace();
 
-                    response.value = "Message sent to " + receiver + ", but do not confirm received yet.";
+                        Response errorResponse = new Response();
+                        errorResponse.value = "Error al enviar mensaje a " + receiver;
 
-                    return response;
+                        // Guardar el mensaje para reintentar
+                        PendingResponseSequential pendingResponse = new PendingResponseSequential();
+                        pendingResponse.setResponseMessage(messageResponse);
+                        pendingResponse.setInitialSender(hostname);
+                        PendingResponseManager.getInstance().addPendingResponse(receiver, pendingResponse);
+                    }
                 }
-
             } catch (Exception e) {
-
-                //If the receiver is not connected.
-                System.out.println("Error sending message to " + receiver + " - On: SendOneMessage");
+                // Manejo de excepciones generales
+                System.out.println("Error en el proceso de sendOneMessage.");
                 e.printStackTrace();
-
-                response.value = "Error sending message to " + receiver;
-
-                //Save message to send and initial sender to confirm message process.
-                PendingResponseSequential pendingResponse = new PendingResponseSequential();
-                pendingResponse.setResponseMessage(messageResponse);
-                pendingResponse.setInitialSender(hostname);
-                PendingResponseManager.getInstance().addPendingResponse(receiver, pendingResponse);
-
             }
-        }
+        });
 
         return response;
-
     }
 
+    public void shutdown() {
+        executorService.shutdown();
+    }
 }
