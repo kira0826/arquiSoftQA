@@ -15,8 +15,6 @@ import utils.NetworkUtils;
 
 public class Client {
 
-    /* 
-
     private static Scanner scanner = new Scanner(System.in);
 
     private static List<Long> processingTimes = new ArrayList<Long>();
@@ -34,34 +32,32 @@ public class Client {
         try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args, "config.client",
                 extraArgs)) {
 
-            //Verify current IP
+            // Verify current IP
             String ip = NetworkUtils.getLocalIPAddress();
             System.out.println("Current IP: " + ip);
 
+            // Set current client server ip
 
-            //Set current client server ip
-
-            communicator.getProperties().setProperty("CallBack.Endpoints", "tcp -h " +ip);
+            communicator.getProperties().setProperty("CallBack.Endpoints", "tcp -h " + ip);
             System.out.println(communicator.getProperties().getProperty("CallBack.Endpoints"));
 
-
-            Demo.PrinterPrx service = Demo.PrinterPrx
+            Demo.PrinterPrx printerService = Demo.PrinterPrx
                     .checkedCast(communicator.propertyToProxy("Printer.Proxy"));
 
-            //Create adapter to expose the callback object
+            Demo.ChatHandlerPrx chatService = Demo.ChatHandlerPrx
+                    .checkedCast(communicator.propertyToProxy("ChatHandler.Proxy"));
+
+            // Create adapter to expose the callback object
             ObjectAdapter adapter = communicator.createObjectAdapter("CallBack");
             Demo.CallBack callBack = new CallbackI();
 
-            //Cast the proxy to the correct type
+            // Cast the proxy to the correct type
             ObjectPrx prx = adapter.add(callBack, Util.stringToIdentity("Callback"));
             Demo.CallBackPrx callBackPrx = Demo.CallBackPrx.checkedCast(prx);
 
-            
-
-            //  service.registerCallback(ip, callBackPrx);
+            // service.registerCallback(ip, callBackPrx);
 
             adapter.activate();
-
 
             try {
                 while (true) {
@@ -73,13 +69,13 @@ public class Client {
                             System.exit(0);
                             break;
                         case 1:
-                            unitario(service);
+                            unitario(printerService, chatService);
                             break;
                         case 2:
-                            benchmark(service);
+                            benchmark(printerService, chatService);
                             break;
                         case 3:
-                            throughput(service);
+                            throughput(printerService, chatService);
                             break;
                         default:
                             break;
@@ -94,12 +90,83 @@ public class Client {
         }
     }
 
+    public static Response execCommand(String s, Demo.PrinterPrx printerService, Demo.ChatHandlerPrx chatService) {
+        long initTime = System.currentTimeMillis();
+        Response response = new Response();
+
+        try {
+            String[] parts = s.split(":");
+            if (parts.length != 3) {
+                response.responseTime = System.currentTimeMillis() - initTime;
+                response.value = "Invalid message format. Expected format: 'username:host:command'";
+                return null;
+            }
+
+            // Get parts of the message
+
+            String username = parts[0];
+            String host = parts[1];
+            String commandStr = parts[2];
+
+            System.out.println("HOSTNAME: " + host);
+
+            // Define arguments for the command
+
+            if (commandStr.startsWith("!")) {
+
+                response = printerService.exceuteShellCommand(host, commandStr.substring(1));
+
+            } else if (commandStr.startsWith("bc")) {
+
+                response = chatService.broadcast(host, commandStr.substring(3));
+
+            } else if (commandStr.startsWith("listclients")) {
+
+                response = chatService.listClients(host);
+
+            } else if (commandStr.matches("\\d+")) {
+
+                response = printerService.FibonacciAndPrimesCommand(host, Integer.parseInt(commandStr));
+
+            } else if (commandStr.startsWith("to")) {
+
+                String[] partsCommand = commandStr.split(" ");
+                String receiver = partsCommand[1];
+
+                String[] args = Arrays.copyOfRange(partsCommand, 2, partsCommand.length);
+                String messageToSend = String.join(" ", args);
+
+                response = chatService.sendOneMessage(host, receiver, messageToSend);
+
+            } else if (commandStr.startsWith("listports")) {
+
+                String[] args = commandStr.split(" ");
+
+                if (args.length < 2) {
+                    response.value = "IP address required for listports command.";
+                    response.responseTime = -1;
+                    return null;
+                }
+
+                response = printerService.listPortsCommands(host, args[1]);
+
+            }
+
+        } catch (Exception e) {
+            response.value = "Error processing the command: " + e.getMessage();
+            response.responseTime = -1;
+        }
+
+        System.out.println("Response: " + response.value);
+
+        return response;
+    }
+
     // Modos de prueba
     // 1. Unitario
 
-    public static void unitario(Demo.PrinterPrx service) {
+    public static void unitario(Demo.PrinterPrx printerPrxService, Demo.ChatHandlerPrx chatService) {
 
-        
         // Inicializacion de variables (mensaje y userHostname)
         String userHostname = setUserHostname();
 
@@ -113,7 +180,7 @@ public class Client {
 
         sentRequestCount++;
         start = System.currentTimeMillis();
-        Response response = service.printString(userHostname + input);
+        Response response = execCommand(userHostname + input, printerPrxService, chatService);
         end = System.currentTimeMillis();
         receivedResponseCount++;
         processingTimes.add(response.responseTime);
@@ -124,12 +191,12 @@ public class Client {
         System.out.println("Respuesta desde el server: " + response.value);
         System.out.println("Tiempo de procesamiento: " + response.responseTime);
         System.out.println("Tiempo de respuesta: " + responseTime);
-        stats(askForServerCount(service));
+        stats(askForServerCount(printerPrxService));
     }
 
     // 2. Benchmark
 
-    public static void benchmark(Demo.PrinterPrx service) {
+    public static void benchmark(Demo.PrinterPrx printerPrxService, Demo.ChatHandlerPrx chatService) {
         reset();
         // Inicializacion de variables (mensaje, cantidad de request y userHostname)
         System.out.println("Ingrese la cantidad de request a enviar: ");
@@ -147,7 +214,7 @@ public class Client {
             System.out.println("Enviando request " + i);
             sentRequestCount++;
             start = System.currentTimeMillis();
-            response = service.printString(userHostname + input);
+            response = execCommand(userHostname + input, printerPrxService, chatService);
             end = System.currentTimeMillis();
             responseTime = end - start;
             responseTimes.add(responseTime);
@@ -160,14 +227,14 @@ public class Client {
         System.out.println(showResponseTimes());
         System.out.println("Tiempos de procesamiento");
         System.out.println(showProcessingTimes());
-        stats(askForServerCount(service));
+        stats(askForServerCount(printerPrxService));
         System.out.println("Benchmark finalizado");
         reset();
     }
 
     // 3. Throughput
 
-    public static void throughput(Demo.PrinterPrx service) {
+    public static void throughput(Demo.PrinterPrx printerPrxService, Demo.ChatHandlerPrx chatService) {
         // Inicializacion de variables (mensaje, cantidad de tiempo y userHostname)
         System.out.println("Ingrese la cantidad de tiempo a realizar: ");
         int timeAmount = Integer.parseInt(scanner.nextLine());
@@ -180,7 +247,7 @@ public class Client {
         Response response = null;
         long startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < timeAmount * 1000) {
-            response = service.printString(userHostname + input);
+            response = execCommand(userHostname + input, printerPrxService, chatService);
             requestCount++;
         }
 
@@ -223,6 +290,25 @@ public class Client {
 
     }
 
+    public static String setHostname() {
+        String hostname = "";
+        try {
+            hostname = Collections.list(NetworkInterface.getNetworkInterfaces()).stream()
+                    .flatMap(intf -> Collections.list(intf.getInetAddresses()).stream())
+                    .filter(addr -> addr.getHostAddress().startsWith("10.147.19"))
+                    .findFirst()
+                    .orElse(InetAddress.getLocalHost())
+                    .getHostAddress();
+            return hostname;
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            return "error";
+        } catch (SocketException e) {
+            e.printStackTrace();
+            return "error";
+        }
+    }
+
     // reset stats
 
     public static void reset() {
@@ -234,12 +320,9 @@ public class Client {
     // Ask server for received requests counter
 
     public static int askForServerCount(Demo.PrinterPrx service) {
-        String message = "";
-        String whoami = f("whoami");
-        String hostname = "";
-        message += whoami + ":" + hostname + ":";
+        String hostname = setHostname();
         Response response = null;
-        response = service.printString(message + "counterRequest");
+        response = service.counterRequestCommand(hostname);
         return Integer.parseInt(response.value);
     }
 
@@ -250,7 +333,7 @@ public class Client {
                 + ((sentRequestCount - serverCounter) / sentRequestCount) * 100 + "%");
         System.out.println("Porcentaje de request sin procesar: "
                 + (((sentRequestCount - receivedResponseCount) - (sentRequestCount - serverCounter))
-                / sentRequestCount) * 100
+                        / sentRequestCount) * 100
                 + "%");
         System.out.println("Jitter: " + calcularDesviacionEstandar(responseTimes));
     }
@@ -316,5 +399,4 @@ public class Client {
         return response;
     }
 
-    */
 }
