@@ -1,6 +1,7 @@
 #Consume services
 
-Printer.Proxy=SimplePrinter:tcp -p 9099
+Printer.Proxy=SimplePrinter:tcp -p 30002
+ChatHandler.Proxy=SimpleChatHandler:tcp -p 28700
 
 #Expose services
 CallBack.Endpoints = tcp -h localhost
