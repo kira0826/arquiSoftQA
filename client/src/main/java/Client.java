@@ -80,6 +80,9 @@ public class Client {
                         case 3:
                             throughput(printerService, chatService);
                             break;
+                        case 4:
+                            System.out.println(askForServerCount(printerService));
+                            break;
                         default:
                             break;
                     }
@@ -318,6 +321,7 @@ public class Client {
         sentRequestCount = 0;
         receivedResponseCount = 0;
         processingTimes = new ArrayList<Long>();
+        responseTimes = new ArrayList<Long>();
     }
 
     // Ask server for received requests counter
@@ -330,12 +334,14 @@ public class Client {
     }
 
     public static void stats(int serverCounter) {
+        System.out.println("Server counter received: " + serverCounter);
+        int serverCountToUse = serverCounter > sentRequestCount ?   sentRequestCount : serverCounter;
         System.out.println("Cantidad de request enviados: " + sentRequestCount);
         System.out.println("Cantidad de request recibidos: " + receivedResponseCount);
         System.out.println("Cantidad de request perdidos: "
-                + ((sentRequestCount - serverCounter) / sentRequestCount) * 100 + "%");
+                + ((sentRequestCount - serverCountToUse) / sentRequestCount) * 100 + "%");
         System.out.println("Porcentaje de request sin procesar: "
-                + (((sentRequestCount - receivedResponseCount) - (sentRequestCount - serverCounter))
+                + (((sentRequestCount - receivedResponseCount) - (sentRequestCount - serverCountToUse))
                         / sentRequestCount) * 100
                 + "%");
         System.out.println("Jitter: " + calcularDesviacionEstandar(responseTimes));

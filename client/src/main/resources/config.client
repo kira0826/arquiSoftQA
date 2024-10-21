@@ -1,6 +1,6 @@
 #Consume services
 
-Printer.Proxy=SimplePrinter:tcp -p 30002
+Printer.Proxy=SimplePrinter:tcp -p 30002 -t 5000
 ChatHandler.Proxy=SimpleChatHandler:tcp -p 28700
 
 #Expose services

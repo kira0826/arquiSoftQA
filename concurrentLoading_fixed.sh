@@ -1,13 +1,13 @@
 #!/bin/bash
 PASSWORD="computacion"  # Contraseña para SSH y SCP
 # Definir el rango de máquinas a las que quieres conectarte (xhgrid4 a xhgrid10)
-for i in {6..8}
+for i in {6..11}
 do
     (
         SERVER="xhgrid$i"
         USER="computacion"
         REMOTE_PATH="/home/$USER/Documents/RicardoUrbina"
-        LOCAL_FILE="./client/build/libs/c   lient.jar"
+        LOCAL_FILE="./client/build/libs/client.jar"
 
         echo "Asegurando que el directorio $REMOTE_PATH existe en $SERVER..."
         # Crear el directorio remoto si no existe
@@ -24,7 +24,7 @@ do
         do
             echo "Ejecutando petición \$j de 1000"
             # Ejecutar el client.jar y enviar las entradas 1 y 100000 cuando se soliciten
-            nohup echo -e "2\n10\nbc MensajePrueba" | java -jar client.jar > "out\$j".txt &
+            nohup echo -e "2\n10000\n1000000" | java -jar client.jar > "out\$j".txt &
         done
 EOF
         echo "Proceso completado en $SERVER con 1000 peticiones."
